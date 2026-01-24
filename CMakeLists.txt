@@ -16,7 +16,8 @@ IF (WIN32 AND NOT UNIX)
     target_link_libraries(raknet ws2_32)
 ENDIF (WIN32 AND NOT UNIX)
     
-target_include_directories(raknet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_include_directories(raknet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(raknet PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include/RakNet")
 
 install(TARGETS raknet RUNTIME DESTINATION "${CMAKE_SOURCE_DIR}/bin"
 			LIBRARY DESTINATION "${CMAKE_SOURCE_DIR}/lib"
