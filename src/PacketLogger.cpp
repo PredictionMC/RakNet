@@ -446,7 +446,7 @@ void PacketLogger::GetLocalTime(char buffer[128])
 	timeinfo = localtime ( &rawtime );
 	strftime (buffer,128,"%x %X",timeinfo);
 	char buff[32];
-	sprintf(buff, ".%i", tv.tv_usec);
+	sprintf(buff, ".%l", tv.tv_usec);
 	strcat(buffer,buff);
 
 	// Commented version puts the time first
