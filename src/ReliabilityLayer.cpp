@@ -14,6 +14,10 @@
 
 
 #include "ReliabilityLayer.h"
+
+#include <algorithm>
+#include <vector>
+
 #include "GetTime.h"
 #include "SocketLayer.h"
 #include "PluginInterface2.h"
@@ -3204,11 +3208,22 @@ InternalPacket * ReliabilityLayer::BuildPacketFromSplitPacketList( SplitPacketCh
 	internalPacket->allocationScheme=InternalPacket::NORMAL;
 
     BitSize_t offset = 0;
-	for (j=0; j < splitPacketChannel->splitPacketList.Size(); j++)
+	unsigned int const internalSize = splitPacketChannel->splitPacketList.Size();
+	std::vector<InternalPacket*> packetArray;
+	packetArray.reserve(internalSize);
+	for (unsigned int i = 0; i < internalSize; ++i)
 	{
-		splitPacket=splitPacketChannel->splitPacketList[j];
-        memcpy(internalPacket->data + BITS_TO_BYTES(offset), splitPacket->data, (size_t)BITS_TO_BYTES(splitPacketChannel->splitPacketList[j]->dataBitLength));
-        offset += splitPacketChannel->splitPacketList[j]->dataBitLength;
+		packetArray.push_back(splitPacketChannel->splitPacketList[i]);
+	}
+	std::ranges::sort(packetArray,
+	                  [](const InternalPacket* a, const InternalPacket* b) {
+		                  return a->splitPacketIndex < b->splitPacketIndex;
+	                  });
+	for (const InternalPacket* packet : packetArray)
+	{
+		printf("%d %d\n", packet->orderingIndex.val, packet->splitPacketIndex); //TODO: DEBUG
+		memcpy(internalPacket->data + BITS_TO_BYTES(offset), packet->data, (size_t)BITS_TO_BYTES(packet->dataBitLength));
+		offset += packet->dataBitLength;
 	}
 
 	for (j=0; j < splitPacketChannel->splitPacketList.Size(); j++)
