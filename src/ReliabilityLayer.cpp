@@ -3221,7 +3221,6 @@ InternalPacket * ReliabilityLayer::BuildPacketFromSplitPacketList( SplitPacketCh
 	                  });
 	for (const InternalPacket* packet : packetArray)
 	{
-		printf("%d %d\n", packet->orderingIndex.val, packet->splitPacketIndex); //TODO: DEBUG
 		memcpy(internalPacket->data + BITS_TO_BYTES(offset), packet->data, (size_t)BITS_TO_BYTES(packet->dataBitLength));
 		offset += packet->dataBitLength;
 	}
