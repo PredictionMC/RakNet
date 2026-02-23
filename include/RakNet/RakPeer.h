@@ -63,8 +63,6 @@ namespace RakNet {
 	struct RemoteSystemIndex { unsigned index; RemoteSystemIndex* next; };
 	//int RAK_DLL_EXPORT SystemAddressAndIndexComp( const SystemAddress &key, const RemoteSystemIndex &data ); // GCC requires RakPeer::RemoteSystemIndex or it won't compile
 
-	inline std::unordered_map<SystemAddress, uint8_t> pendingProtocolVersions;
-
 	///\brief Main interface for network communications.
 	/// \details It implements most of RakNet's functionality and is the primary interface for RakNet.
 	///

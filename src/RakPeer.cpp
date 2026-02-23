@@ -5160,7 +5160,6 @@ namespace RakNet {
 					return true;
 				}
 
-				pendingProtocolVersions[systemAddress] = remoteProtocol;
 				for (i = 0; i < rakPeer->pluginListNTS.Size(); i++)
 					rakPeer->pluginListNTS[i]->OnDirectSocketReceive(data, length * 8, systemAddress);
 
@@ -5258,18 +5257,6 @@ namespace RakNet {
 
 				RakPeer::RemoteSystemStruct* rssFromSA = rakPeer->GetRemoteSystemFromSystemAddress(systemAddress, true, true);
 				bool IPAddrInUse = rssFromSA != 0 && rssFromSA->isActive;
-
-				auto it = pendingProtocolVersions.find(systemAddress);
-				if (it != pendingProtocolVersions.end())
-				{
-					rssFromSA->clientRakNetProtocol = it->second;
-					pendingProtocolVersions.erase(it);
-				}
-				else
-				{
-					rssFromSA->clientRakNetProtocol = RAKNET_PROTOCOL_VERSION;
-				}
-
 				RakPeer::RemoteSystemStruct* rssFromGuid = rakPeer->GetRemoteSystemFromGUID(guid, true);
 				bool GUIDInUse = rssFromGuid != 0 && rssFromGuid->isActive;
 
