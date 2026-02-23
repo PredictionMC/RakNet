@@ -4546,7 +4546,7 @@ namespace RakNet {
 		RakNet::Packet* packet;
 		unsigned i;
 
-
+		printf("received pkt");
 		char str1[64];
 		systemAddress.ToString(false, str1);
 		if (rakPeer->IsBanned(str1))
