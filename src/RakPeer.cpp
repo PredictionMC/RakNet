@@ -5126,7 +5126,7 @@ namespace RakNet {
 					rakPeer->AddPacketToProducer(packet);
 				}
 			}
-			else if ((unsigned char)(data)[0] == ID_OPEN_CONNECTION_REQUEST_1)
+			else if ((unsigned char)(data)[0] == ID_OPEN_CONNECTION_REQUEST_1 && length > (int)(1 + sizeof(OFFLINE_MESSAGE_DATA_ID)))
 			{/*
 				static int x = 0;
 				++x;
