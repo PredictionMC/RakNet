@@ -5145,7 +5145,7 @@ namespace RakNet {
 				{
 					RakNet::BitStream bs;
 					bs.Write((MessageID)ID_INCOMPATIBLE_PROTOCOL_VERSION);
-					bs.Write((uint8_t)RAKNET_PROTOCOL_VERSION);
+					bs.Write(MAX_RAKNET_VERSION);
 					bs.WriteAlignedBytes(
 						(const unsigned char*)OFFLINE_MESSAGE_DATA_ID,
 						sizeof(OFFLINE_MESSAGE_DATA_ID));
@@ -5158,6 +5158,18 @@ namespace RakNet {
 
 					rakNetSocket->Send(&bsp, _FILE_AND_LINE_);
 					return true;
+				}
+
+				// ts shouldnt be considered for the most part.
+				for (int i = 0; i < 256; ++i)
+				{
+					if (!rakPeer->pendingProtocols[i].used)
+					{
+						rakPeer->pendingProtocols[i].addr = systemAddress;
+						rakPeer->pendingProtocols[i].protocol = remoteProtocol;
+						rakPeer->pendingProtocols[i].used = true;
+						break;
+					}
 				}
 
 				for (i = 0; i < rakPeer->pluginListNTS.Size(); i++)
@@ -5257,6 +5269,20 @@ namespace RakNet {
 
 				RakPeer::RemoteSystemStruct* rssFromSA = rakPeer->GetRemoteSystemFromSystemAddress(systemAddress, true, true);
 				bool IPAddrInUse = rssFromSA != 0 && rssFromSA->isActive;
+				uint8_t clientProtocol = RAKNET_PROTOCOL_VERSION;
+
+				for (int i = 0; i < 256; ++i)
+				{
+					if (rakPeer->pendingProtocols[i].used &&
+						rakPeer->pendingProtocols[i].addr == systemAddress)
+					{
+						clientProtocol = rakPeer->pendingProtocols[i].protocol;
+						rakPeer->pendingProtocols[i].used = false;
+						break;
+					}
+				}
+
+				rssFromSA->clientRakNetProtocol = clientProtocol;
 				RakPeer::RemoteSystemStruct* rssFromGuid = rakPeer->GetRemoteSystemFromGUID(guid, true);
 				bool GUIDInUse = rssFromGuid != 0 && rssFromGuid->isActive;
 
@@ -5760,7 +5786,7 @@ bool RakPeer::RunUpdateCycle(BitStream& updateBitStream)
 					//WriteOutOfBandHeader(&bitStream, ID_USER_PACKET_ENUM);
 					bitStream.Write((MessageID)ID_OPEN_CONNECTION_REQUEST_1);
 					bitStream.WriteAlignedBytes((const unsigned char*)OFFLINE_MESSAGE_DATA_ID, sizeof(OFFLINE_MESSAGE_DATA_ID));
-					bitStream.Write((MessageID)RAKNET_PROTOCOL_VERSION);
+					bitStream.Write((MessageID)remoteSystem->clientRakNetProtocol);
 					bitStream.PadWithZeroToByteLength(mtuSizes[MTUSizeIndex] - UDP_HEADER_SIZE);
 
 					char str[256];

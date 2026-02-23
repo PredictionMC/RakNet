@@ -61,6 +61,12 @@ namespace RakNet {
 	// Sucks but this struct has to be outside the class.  Inside and DevCPP won't let you refer to the struct as RakPeer::RemoteSystemIndex while GCC
 	// forces you to do RakPeer::RemoteSystemIndex
 	struct RemoteSystemIndex { unsigned index; RemoteSystemIndex* next; };
+	struct PendingProtocol
+	{
+		SystemAddress addr;
+		uint8_t protocol;
+		bool used;
+	};
 	//int RAK_DLL_EXPORT SystemAddressAndIndexComp( const SystemAddress &key, const RemoteSystemIndex &data ); // GCC requires RakPeer::RemoteSystemIndex or it won't compile
 
 	///\brief Main interface for network communications.
@@ -800,6 +806,7 @@ namespace RakNet {
 
 		// Use a hash, with binaryAddress plus port mod length as the index
 		RemoteSystemIndex** remoteSystemLookup;
+		PendingProtocol pendingProtocols[256];
 		unsigned int RemoteSystemLookupHashIndex(const SystemAddress& sa) const;
 		void ReferenceRemoteSystem(const SystemAddress& sa, unsigned int remoteSystemListIndex);
 		void DereferenceRemoteSystem(const SystemAddress& sa);
