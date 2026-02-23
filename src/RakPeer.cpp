@@ -5142,7 +5142,7 @@ namespace RakNet {
 				constexpr uint8_t MIN_RAKNET_VERSION = 8;
 				constexpr uint8_t MAX_RAKNET_VERSION = (uint8_t)RAKNET_PROTOCOL_VERSION;
 
-				if (remoteProtocol < MIN_RAKNET_VERSION ||
+		/*		if (remoteProtocol < MIN_RAKNET_VERSION ||
 					remoteProtocol > MAX_RAKNET_VERSION)
 				{
 					RakNet::BitStream bs;
@@ -5160,7 +5160,11 @@ namespace RakNet {
 
 					rakNetSocket->Send(&bsp, _FILE_AND_LINE_);
 					return true;
-				}
+				}*/
+
+				printf("[RakNet] Remote Protocol (%u) for %s\n",
+					remoteProtocol,
+					systemAddress.ToString());
 
 				// ts shouldnt be considered for the most part.
 				std::lock_guard<std::mutex> lock(rakPeer->pendingProtocolsMutex);
