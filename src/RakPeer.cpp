@@ -5126,7 +5126,7 @@ namespace RakNet {
 					rakPeer->AddPacketToProducer(packet);
 				}
 			}
-			else if ((unsigned char)(data)[0] == ID_OPEN_CONNECTION_REQUEST_1 && length > (int)(1 + sizeof(OFFLINE_MESSAGE_DATA_ID)))
+			else if ((unsigned char)(data)[0] == ID_OPEN_CONNECTION_REQUEST_1)
 			{/*
 				static int x = 0;
 				++x;
@@ -5142,25 +5142,25 @@ namespace RakNet {
 				constexpr uint8_t MIN_RAKNET_VERSION = 8;
 				constexpr uint8_t MAX_RAKNET_VERSION = (uint8_t)RAKNET_PROTOCOL_VERSION;
 
-		/*		if (remoteProtocol < MIN_RAKNET_VERSION ||
-					remoteProtocol > MAX_RAKNET_VERSION)
-				{
-					RakNet::BitStream bs;
-					bs.Write((MessageID)ID_INCOMPATIBLE_PROTOCOL_VERSION);
-					bs.Write(MAX_RAKNET_VERSION);
-					bs.WriteAlignedBytes(
-						(const unsigned char*)OFFLINE_MESSAGE_DATA_ID,
-						sizeof(OFFLINE_MESSAGE_DATA_ID));
-					bs.Write(rakPeer->GetGuidFromSystemAddress(UNASSIGNED_SYSTEM_ADDRESS));
+				/*		if (remoteProtocol < MIN_RAKNET_VERSION ||
+							remoteProtocol > MAX_RAKNET_VERSION)
+						{
+							RakNet::BitStream bs;
+							bs.Write((MessageID)ID_INCOMPATIBLE_PROTOCOL_VERSION);
+							bs.Write(MAX_RAKNET_VERSION);
+							bs.WriteAlignedBytes(
+								(const unsigned char*)OFFLINE_MESSAGE_DATA_ID,
+								sizeof(OFFLINE_MESSAGE_DATA_ID));
+							bs.Write(rakPeer->GetGuidFromSystemAddress(UNASSIGNED_SYSTEM_ADDRESS));
 
-					RNS2_SendParameters bsp;
-					bsp.data = (char*)bs.GetData();
-					bsp.length = bs.GetNumberOfBytesUsed();
-					bsp.systemAddress = systemAddress;
+							RNS2_SendParameters bsp;
+							bsp.data = (char*)bs.GetData();
+							bsp.length = bs.GetNumberOfBytesUsed();
+							bsp.systemAddress = systemAddress;
 
-					rakNetSocket->Send(&bsp, _FILE_AND_LINE_);
-					return true;
-				}*/
+							rakNetSocket->Send(&bsp, _FILE_AND_LINE_);
+							return true;
+						}*/
 
 				printf("[RakNet] Remote Protocol (%u) for %s\n",
 					remoteProtocol,
@@ -5812,7 +5812,7 @@ bool RakPeer::RunUpdateCycle(BitStream& updateBitStream)
 					//WriteOutOfBandHeader(&bitStream, ID_USER_PACKET_ENUM);
 					bitStream.Write((MessageID)ID_OPEN_CONNECTION_REQUEST_1);
 					bitStream.WriteAlignedBytes((const unsigned char*)OFFLINE_MESSAGE_DATA_ID, sizeof(OFFLINE_MESSAGE_DATA_ID));
-					bitStream.Write(10);
+					bitStream.Write(11);
 					bitStream.PadWithZeroToByteLength(mtuSizes[MTUSizeIndex] - UDP_HEADER_SIZE);
 
 					char str[256];
