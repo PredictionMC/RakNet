@@ -5137,7 +5137,7 @@ namespace RakNet {
 				uint8_t remoteProtocol =
 					static_cast<uint8_t>(data[1 + sizeof(OFFLINE_MESSAGE_DATA_ID)]);
 
-				constexpr uint8_t MIN_RAKNET_VERSION = 10;
+				constexpr uint8_t MIN_RAKNET_VERSION = 9;
 				constexpr uint8_t MAX_RAKNET_VERSION = (uint8_t)RAKNET_PROTOCOL_VERSION;
 
 				if (remoteProtocol < MIN_RAKNET_VERSION ||
