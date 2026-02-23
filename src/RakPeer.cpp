@@ -185,6 +185,8 @@ Packet* RakPeer::AllocPacket(unsigned dataSize, unsigned char* data, const char*
 }
 
 STATIC_FACTORY_DEFINITIONS(RakPeerInterface, RakPeer)
+// this isnt how it suppose todo but lwk, if it works it works
+std::unordered_map<SystemAddress, uint8_t> pendingProtocolVersions;
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Constructor

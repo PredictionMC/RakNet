@@ -61,7 +61,7 @@ class PluginInterface2;
 // Sucks but this struct has to be outside the class.  Inside and DevCPP won't let you refer to the struct as RakPeer::RemoteSystemIndex while GCC
 // forces you to do RakPeer::RemoteSystemIndex
 struct RemoteSystemIndex{unsigned index; RemoteSystemIndex *next;};
-std::unordered_map<SystemAddress, uint8_t> pendingProtocolVersions;
+extern std::unordered_map<SystemAddress, uint8_t> pendingProtocolVersions;
 //int RAK_DLL_EXPORT SystemAddressAndIndexComp( const SystemAddress &key, const RemoteSystemIndex &data ); // GCC requires RakPeer::RemoteSystemIndex or it won't compile
 
 ///\brief Main interface for network communications.
