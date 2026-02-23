@@ -36,6 +36,22 @@
 #include "SecureHandshake.h"
 #include "LocklessTypes.h"
 #include "DS_Queue.h"
+#include <string>
+#include <functional>
+#include <unordered_map>
+
+namespace std {
+	template <>
+	struct hash<RakNet::SystemAddress>
+	{
+		size_t operator()(const RakNet::SystemAddress& sa) const noexcept
+		{
+			char buffer[32];
+			sa.ToString(true, buffer);
+			return std::hash<std::string>()(buffer);
+		}
+	};
+}
 
 namespace RakNet {
 /// Forward declarations
@@ -45,6 +61,7 @@ class PluginInterface2;
 // Sucks but this struct has to be outside the class.  Inside and DevCPP won't let you refer to the struct as RakPeer::RemoteSystemIndex while GCC
 // forces you to do RakPeer::RemoteSystemIndex
 struct RemoteSystemIndex{unsigned index; RemoteSystemIndex *next;};
+std::unordered_map<SystemAddress, uint8_t> pendingProtocolVersions;
 //int RAK_DLL_EXPORT SystemAddressAndIndexComp( const SystemAddress &key, const RemoteSystemIndex &data ); // GCC requires RakPeer::RemoteSystemIndex or it won't compile
 
 ///\brief Main interface for network communications.
@@ -680,6 +697,7 @@ public:
 		// Reference counted socket to send back on
 		RakNetSocket2* rakNetSocket;
 		SystemIndex remoteSystemIndex;
+		uint8_t clientRakNetProtocol = 0;
 
 #if LIBCAT_SECURITY==1
 		// Cached answer used internally by RakPeer to prevent DoS attacks based on the connexion handshake
@@ -1030,5 +1048,4 @@ protected:
 ;
 
 } // namespace RakNet
-
 #endif
