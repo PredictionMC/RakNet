@@ -53,6 +53,8 @@
 #include "SuperFastHash.h"
 #include "RakAlloca.h"
 #include "WSAStartupSingleton.h"
+#include <mutex>
+#include <unordered_map>
 
 #ifdef USE_THREADED_SEND
 #include "SendToThread.h"
@@ -5161,16 +5163,8 @@ namespace RakNet {
 				}
 
 				// ts shouldnt be considered for the most part.
-				for (int i = 0; i < 256; ++i)
-				{
-					if (!rakPeer->pendingProtocols[i].used)
-					{
-						rakPeer->pendingProtocols[i].addr = systemAddress;
-						rakPeer->pendingProtocols[i].protocol = remoteProtocol;
-						rakPeer->pendingProtocols[i].used = true;
-						break;
-					}
-				}
+				std::lock_guard<std::mutex> lock(rakPeer->pendingProtocolsMutex);
+				rakPeer->pendingProtocols[systemAddress] = remoteProtocol;
 
 				for (i = 0; i < rakPeer->pluginListNTS.Size(); i++)
 					rakPeer->pluginListNTS[i]->OnDirectSocketReceive(data, length * 8, systemAddress);
@@ -5267,24 +5261,52 @@ namespace RakNet {
 				bs.Read(mtu);
 				bs.Read(guid);
 
-				RakPeer::RemoteSystemStruct* rssFromSA = rakPeer->GetRemoteSystemFromSystemAddress(systemAddress, true, true);
+				RakPeer::RemoteSystemStruct* rssFromSA =
+					rakPeer->GetRemoteSystemFromSystemAddress(systemAddress, true, true);
 				bool IPAddrInUse = rssFromSA != 0 && rssFromSA->isActive;
-				uint8_t clientProtocol = RAKNET_PROTOCOL_VERSION;
+				RakPeer::RemoteSystemStruct* rssFromGuid =
+					rakPeer->GetRemoteSystemFromGUID(guid, true);
+				bool GUIDInUse = rssFromGuid != 0 && rssFromGuid->isActive;
 
-				for (int i = 0; i < 256; ++i)
+				uint8_t clientProtocol = RAKNET_PROTOCOL_VERSION;
+				bool usedDefaultProtocol = true;
 				{
-					if (rakPeer->pendingProtocols[i].used &&
-						rakPeer->pendingProtocols[i].addr == systemAddress)
+					std::lock_guard<std::mutex> lock(rakPeer->pendingProtocolsMutex);
+
+					auto it = rakPeer->pendingProtocols.find(systemAddress);
+					if (it != rakPeer->pendingProtocols.end())
 					{
-						clientProtocol = rakPeer->pendingProtocols[i].protocol;
-						rakPeer->pendingProtocols[i].used = false;
-						break;
+						clientProtocol = it->second;
+						rakPeer->pendingProtocols.erase(it);
+						usedDefaultProtocol = false;
 					}
 				}
+				RakPeer::RemoteSystemStruct* targetRSS = nullptr;
 
-				rssFromSA->clientRakNetProtocol = clientProtocol;
-				RakPeer::RemoteSystemStruct* rssFromGuid = rakPeer->GetRemoteSystemFromGUID(guid, true);
-				bool GUIDInUse = rssFromGuid != 0 && rssFromGuid->isActive;
+				if (rssFromSA)
+				{
+					targetRSS = rssFromSA;
+				}
+				else if (rssFromGuid)
+				{
+					targetRSS = rssFromGuid;
+				}
+				if (targetRSS)
+				{
+					targetRSS->clientRakNetProtocol = clientProtocol;
+				}
+				if (usedDefaultProtocol)
+				{
+					printf("[RakNet] Using DEFAULT protocol (%u) for %s\n",
+						clientProtocol,
+						systemAddress.ToString());
+				}
+				else
+				{
+					printf("[RakNet] Using CLIENT protocol (%u) for %s\n",
+						clientProtocol,
+						systemAddress.ToString());
+				}
 
 				// IPAddrInUse, GuidInUse, outcome
 				// TRUE,	  , TRUE	 , ID_OPEN_CONNECTION_REPLY if they are the same, else ID_ALREADY_CONNECTED
@@ -5786,7 +5808,7 @@ bool RakPeer::RunUpdateCycle(BitStream& updateBitStream)
 					//WriteOutOfBandHeader(&bitStream, ID_USER_PACKET_ENUM);
 					bitStream.Write((MessageID)ID_OPEN_CONNECTION_REQUEST_1);
 					bitStream.WriteAlignedBytes((const unsigned char*)OFFLINE_MESSAGE_DATA_ID, sizeof(OFFLINE_MESSAGE_DATA_ID));
-					bitStream.Write((MessageID)remoteSystem->clientRakNetProtocol);
+					bitStream.Write(remoteSystem->clientRakNetProtocol);
 					bitStream.PadWithZeroToByteLength(mtuSizes[MTUSizeIndex] - UDP_HEADER_SIZE);
 
 					char str[256];

@@ -36,8 +36,7 @@
 #include "SecureHandshake.h"
 #include "LocklessTypes.h"
 #include "DS_Queue.h"
-#include <string>
-#include <functional>
+#include <mutex>
 #include <unordered_map>
 
 namespace std {
@@ -61,12 +60,23 @@ namespace RakNet {
 	// Sucks but this struct has to be outside the class.  Inside and DevCPP won't let you refer to the struct as RakPeer::RemoteSystemIndex while GCC
 	// forces you to do RakPeer::RemoteSystemIndex
 	struct RemoteSystemIndex { unsigned index; RemoteSystemIndex* next; };
-	struct PendingProtocol
+	struct SystemAddressHasher
 	{
-		SystemAddress addr;
-		uint8_t protocol;
-		bool used;
+		std::size_t operator()(const SystemAddress& sa) const noexcept
+		{
+			return std::hash<uint32_t>()(sa.address.addr4.sin_addr.s_addr) ^
+				std::hash<uint16_t>()(sa.address.addr4.sin_port);
+		}
 	};
+
+	struct SystemAddressEqual
+	{
+		bool operator()(const SystemAddress& a, const SystemAddress& b) const noexcept
+		{
+			return a == b;
+		}
+	};
+
 	//int RAK_DLL_EXPORT SystemAddressAndIndexComp( const SystemAddress &key, const RemoteSystemIndex &data ); // GCC requires RakPeer::RemoteSystemIndex or it won't compile
 
 	///\brief Main interface for network communications.
@@ -792,6 +802,8 @@ namespace RakNet {
 		// SystemAddress mySystemAddress[MAXIMUM_NUMBER_OF_INTERNAL_IDS];
 		char incomingPassword[256];
 		unsigned char incomingPasswordLength;
+		std::unordered_map<SystemAddress, uint8_t, SystemAddressHasher, SystemAddressEqual> pendingProtocols;
+		std::mutex pendingProtocolsMutex;
 
 		/// This is an array of pointers to RemoteSystemStruct
 		/// This allows us to preallocate the list when starting, so we don't have to allocate or delete at runtime.
@@ -806,7 +818,6 @@ namespace RakNet {
 
 		// Use a hash, with binaryAddress plus port mod length as the index
 		RemoteSystemIndex** remoteSystemLookup;
-		PendingProtocol pendingProtocols[256];
 		unsigned int RemoteSystemLookupHashIndex(const SystemAddress& sa) const;
 		void ReferenceRemoteSystem(const SystemAddress& sa, unsigned int remoteSystemListIndex);
 		void DereferenceRemoteSystem(const SystemAddress& sa);
