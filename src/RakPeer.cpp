@@ -4681,7 +4681,7 @@ namespace RakNet {
 				}
 			}
 			// UNCONNECTED MESSAGE Pong with no data.
-			else if ((unsigned char)data[0] == ID_UNCONNECTED_PONG && (size_t)length >= sizeof(unsigned char) + sizeof(RakNet::Time) + RakNetGUID::size() + sizeof(OFFLINE_MESSAGE_DATA_ID) && (size_t)length < sizeof(unsigned char) + sizeof(RakNet::Time) + RakNetGUID::size() + sizeof(OFFLINE_MESSAGE_DATA_ID) + MAX_OFFLINE_DATA_LENGTH)
+			else if ((unsigned char)data[0] == ID_UNCONNECTED_PONG)
 			{
 				packet = rakPeer->AllocPacket((unsigned int)(length - sizeof(OFFLINE_MESSAGE_DATA_ID) - RakNetGUID::size() - sizeof(RakNet::Time) + sizeof(RakNet::TimeMS)), _FILE_AND_LINE_);
 				RakNet::BitStream bsIn((unsigned char*)data, length, false);
@@ -5126,7 +5126,7 @@ namespace RakNet {
 					rakPeer->AddPacketToProducer(packet);
 				}
 			}
-			else if ((unsigned char)(data)[0] == ID_OPEN_CONNECTION_REQUEST_1 && length > (int)(1 + sizeof(OFFLINE_MESSAGE_DATA_ID)))
+			else if ((unsigned char)(data)[0] == ID_OPEN_CONNECTION_REQUEST_1)
 			{/*
 				static int x = 0;
 				++x;
