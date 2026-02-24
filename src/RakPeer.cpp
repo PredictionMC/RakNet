@@ -5295,18 +5295,6 @@ namespace RakNet {
 				{
 					targetRSS->clientRakNetProtocol = clientProtocol;
 				}
-				if (usedDefaultProtocol)
-				{
-					printf("[RakNet] Using DEFAULT protocol (%u) for %s\n",
-						clientProtocol,
-						systemAddress.ToString());
-				}
-				else
-				{
-					printf("[RakNet] Using CLIENT protocol (%u) for %s\n",
-						clientProtocol,
-						systemAddress.ToString());
-				}
 
 				// IPAddrInUse, GuidInUse, outcome
 				// TRUE,	  , TRUE	 , ID_OPEN_CONNECTION_REPLY if they are the same, else ID_ALREADY_CONNECTED
