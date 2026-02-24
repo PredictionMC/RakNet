@@ -4546,7 +4546,7 @@ namespace RakNet {
 		RakNet::Packet* packet;
 		unsigned i;
 
-		printf("received pkt");
+
 		char str1[64];
 		systemAddress.ToString(false, str1);
 		if (rakPeer->IsBanned(str1))
@@ -4681,7 +4681,7 @@ namespace RakNet {
 				}
 			}
 			// UNCONNECTED MESSAGE Pong with no data.
-			else if ((unsigned char)data[0] == ID_UNCONNECTED_PONG)
+			else if ((unsigned char)data[0] == ID_UNCONNECTED_PONG && (size_t)length >= sizeof(unsigned char) + sizeof(RakNet::Time) + RakNetGUID::size() + sizeof(OFFLINE_MESSAGE_DATA_ID) && (size_t)length < sizeof(unsigned char) + sizeof(RakNet::Time) + RakNetGUID::size() + sizeof(OFFLINE_MESSAGE_DATA_ID) + MAX_OFFLINE_DATA_LENGTH)
 			{
 				packet = rakPeer->AllocPacket((unsigned int)(length - sizeof(OFFLINE_MESSAGE_DATA_ID) - RakNetGUID::size() - sizeof(RakNet::Time) + sizeof(RakNet::TimeMS)), _FILE_AND_LINE_);
 				RakNet::BitStream bsIn((unsigned char*)data, length, false);
@@ -5126,7 +5126,7 @@ namespace RakNet {
 					rakPeer->AddPacketToProducer(packet);
 				}
 			}
-			else if ((unsigned char)(data)[0] == ID_OPEN_CONNECTION_REQUEST_1)
+			else if ((unsigned char)(data)[0] == ID_OPEN_CONNECTION_REQUEST_1 && length > (int)(1 + sizeof(OFFLINE_MESSAGE_DATA_ID)))
 			{/*
 				static int x = 0;
 				++x;
@@ -5142,29 +5142,25 @@ namespace RakNet {
 				constexpr uint8_t MIN_RAKNET_VERSION = 8;
 				constexpr uint8_t MAX_RAKNET_VERSION = (uint8_t)RAKNET_PROTOCOL_VERSION;
 
-				/*		if (remoteProtocol < MIN_RAKNET_VERSION ||
-							remoteProtocol > MAX_RAKNET_VERSION)
-						{
-							RakNet::BitStream bs;
-							bs.Write((MessageID)ID_INCOMPATIBLE_PROTOCOL_VERSION);
-							bs.Write(MAX_RAKNET_VERSION);
-							bs.WriteAlignedBytes(
-								(const unsigned char*)OFFLINE_MESSAGE_DATA_ID,
-								sizeof(OFFLINE_MESSAGE_DATA_ID));
-							bs.Write(rakPeer->GetGuidFromSystemAddress(UNASSIGNED_SYSTEM_ADDRESS));
+				if (remoteProtocol < MIN_RAKNET_VERSION ||
+					remoteProtocol > MAX_RAKNET_VERSION)
+				{
+					RakNet::BitStream bs;
+					bs.Write((MessageID)ID_INCOMPATIBLE_PROTOCOL_VERSION);
+					bs.Write(MAX_RAKNET_VERSION);
+					bs.WriteAlignedBytes(
+						(const unsigned char*)OFFLINE_MESSAGE_DATA_ID,
+						sizeof(OFFLINE_MESSAGE_DATA_ID));
+					bs.Write(rakPeer->GetGuidFromSystemAddress(UNASSIGNED_SYSTEM_ADDRESS));
 
-							RNS2_SendParameters bsp;
-							bsp.data = (char*)bs.GetData();
-							bsp.length = bs.GetNumberOfBytesUsed();
-							bsp.systemAddress = systemAddress;
+					RNS2_SendParameters bsp;
+					bsp.data = (char*)bs.GetData();
+					bsp.length = bs.GetNumberOfBytesUsed();
+					bsp.systemAddress = systemAddress;
 
-							rakNetSocket->Send(&bsp, _FILE_AND_LINE_);
-							return true;
-						}*/
-
-				printf("[RakNet] Remote Protocol (%u) for %s\n",
-					remoteProtocol,
-					systemAddress.ToString());
+					rakNetSocket->Send(&bsp, _FILE_AND_LINE_);
+					return true;
+				}
 
 				// ts shouldnt be considered for the most part.
 				std::lock_guard<std::mutex> lock(rakPeer->pendingProtocolsMutex);
@@ -5812,7 +5808,7 @@ bool RakPeer::RunUpdateCycle(BitStream& updateBitStream)
 					//WriteOutOfBandHeader(&bitStream, ID_USER_PACKET_ENUM);
 					bitStream.Write((MessageID)ID_OPEN_CONNECTION_REQUEST_1);
 					bitStream.WriteAlignedBytes((const unsigned char*)OFFLINE_MESSAGE_DATA_ID, sizeof(OFFLINE_MESSAGE_DATA_ID));
-					bitStream.Write(11);
+					bitStream.Write(remoteSystem->clientRakNetProtocol);
 					bitStream.PadWithZeroToByteLength(mtuSizes[MTUSizeIndex] - UDP_HEADER_SIZE);
 
 					char str[256];
